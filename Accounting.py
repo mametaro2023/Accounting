@@ -4,8 +4,8 @@ import datetime as dt
 
 #GUI作成
 root = tk.Tk()
-root.geometry("720x540")
-root.title("Accounting")
+root.geometry("240x240")
+root.title("Key Swap")
 
 now = dt.datetime.now()
 weekday = int(now.weekday())
