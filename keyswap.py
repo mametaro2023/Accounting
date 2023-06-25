@@ -5,28 +5,37 @@ import threading
 import time
 import pyautogui as pgui
 import sys
+#from pynput import keyboard
 
+#keyboard.add_hotkey("a",lambda: print("pressed a"),suppress=True)
+#keyboard.wait("b")
+
+#必要
+what_swap = "page up"
 
 #終了
 def click_close():
     global go
-    button.config(text = "Enable")
-    now_enabled.config(text="")
-    go = False
-    
-    global swap1_key
-    global swap2_key
-    if swap1_key == "?" or swap2_key == "?":
-        messagebox.showinfo(message="You cannot close the software while you are changing swap keys.")
-    elif messagebox.askokcancel(message="Are you sure to close?"):
-        #print("closed")
-        root.destroy()
-        sys.exit()
+    if go == True:
+        messagebox.showinfo(message="You cannot close the software while key swapping is enabled")
+    else:
+        button.config(text = "Enable")
+        now_enabled.config(text="")
+        go = False
+        
+        global swap1_key
+        global swap2_key
+        if swap1_key == "?" or swap2_key == "?":
+            messagebox.showinfo(message="You cannot close the software while you are changing swap keys.")
+        elif messagebox.askokcancel(message="Are you sure to close?"):
+            #print("closed")
+            root.destroy()
+            sys.exit()
     
 
 #GUI作成
 root = tk.Tk()
-root.geometry("240x240")
+root.geometry("240x220")
 root.title("Key Swap")
 
 #swap keys
@@ -38,6 +47,8 @@ go = False
 #main
 def check():
     global go
+    global swap1_key
+    global swap2_key
     if button["text"] == "Enable":
         button.config(text = "Disable")
         now_enabled.config(text = "NOW ENABLED!" ,)
@@ -52,29 +63,64 @@ def check():
 #メイン処理
 def main():
     global go
+    global swap1
+    global swap2
+    
+    if go == False:
+        setup_button.config(state = tk.NORMAL)
+        now_enabled.config(text="")
+        
+        #swap1 = "page up"
+        #swap2 = "page up"
+        keyboard.unremap_key(remove=swap1)
+        keyboard.unremap_key(remove=swap2)
+
+    def sp1():
+        global swap2
+        print(swap1,swap2)
+        keyboard.press_and_release(swap2)
+    def sp2():
+        global swap1
+        print(swap1,swap2)
+        keyboard.press_and_release(swap1)
+    print(go)
+   
+        
+
     if go == True:
         setup_button.config(state = tk.DISABLED)   
         swap1 = swap1_key
         swap2 = swap2_key
-        keyboard.block_key(swap1)
-        keyboard.block_key(swap2)
+        swap = str(swap1 + "," + swap2)
+        #keyboard.block_key(swap1)
+        #keyboard.block_key(swap2)
+        keyboard.remap_key(swap1,swap2)
+        keyboard.remap_key(swap2,swap1)
         
-        while True:
-            # print(go)
-            if go == False:
-                break
-            if keyboard.is_pressed(swap1):
-                pgui.typewrite(swap2)
-            if keyboard.is_pressed(swap2):
-                pgui.typewrite(swap1)
-            
-        keyboard.unhook_all()
-        setup_button.config(state = tk.NORMAL)  
+    print(swap1)
+    print(swap2)
+    #keyboard.on_press_key(swap1, lambda _:sp1(),suppress=True)
+    #keyboard.on_press_key(swap2, lambda _:sp2(),suppress=True)
+        #flg = keyboard.read_key(suppress= True)
+        #keyboard.add_hotkey(swap1,lambda: sp1(),suppress=True)
+        #keyboard.add_hotkey(swap2,lambda: sp2(),suppress=True)
+
+        #keyboard.wait("page down",)
+
+        #keyboard.clear_all_hotkeys()
+        #print(flg)
+ 
+
+
+       
+
+        
+
+
 
 #push
 def button_push():
         check()
-
         thread3 = threading.Thread(target = main)
         thread3.start()
 
@@ -116,7 +162,7 @@ now_enabled = tk.Label(root, text = "", fg = "red", font = ("",20,"bold"))
 now_enabled.pack(pady=10)
 
 #実行
-button = tk.Button(root, text = "Enable", font = ("",20,"bold"),command=button_push)
+button = tk.Button(root, text = "Enable", font = ("",14,"bold"),command=button_push)
 button.pack()
 
 root.protocol("WM_DELETE_WINDOW", click_close)
