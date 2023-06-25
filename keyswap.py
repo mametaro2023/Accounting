@@ -3,31 +3,54 @@ from tkinter import messagebox
 import keyboard
 import threading
 import time
-import pyautogui as pgui
 import sys
+import subprocess
+import os
 #from pynput import keyboard
 
 #keyboard.add_hotkey("a",lambda: print("pressed a"),suppress=True)
 #keyboard.wait("b")
 
 #必要
+filepath = "keyswap\keyswap_setting.txt"
 what_swap = "page up"
+try:
+    os.mkdir("keyswap")
+    cmd = ["attrib", "+H", "keyswap"]
+    subprocess.run(cmd)
+except FileExistsError:
+    pass
+try:
+    with open(filepath, "r") as f:
+        swapdata = f.readlines()
+        #swap keys
+        swap1_key = swapdata[0].rstrip("\n")
+        swap2_key = swapdata[1].rstrip("\n")
+        f.close()
+except FileNotFoundError:
+    swap1_key = "a"
+    swap2_key = "b"
 
 #終了
 def click_close():
     global go
     if go == True:
-        messagebox.showinfo(message="You cannot close the software while key swapping is enabled")
+        messagebox.showinfo(message="キー入れ替え中はソフトを閉じることができません。")
     else:
-        button.config(text = "Enable")
+        button.config(text = "有効化")
         now_enabled.config(text="")
         go = False
         
         global swap1_key
         global swap2_key
+        global filepath
         if swap1_key == "?" or swap2_key == "?":
-            messagebox.showinfo(message="You cannot close the software while you are changing swap keys.")
-        elif messagebox.askokcancel(message="Are you sure to close?"):
+            messagebox.showinfo(message="入れ替えキー設定中はソフトを閉じることができません。")
+        elif messagebox.askokcancel(message="本当に閉じますか？", detail="現在の入れ替えキーが保存されます。"):
+            swapkeylist = [swap1_key + "\n" ,swap2_key + "\n"]
+            with open(filepath, "w") as f:
+                f.writelines(swapkeylist)
+                f.close()
             #print("closed")
             root.destroy()
             sys.exit()
@@ -38,9 +61,7 @@ root = tk.Tk()
 root.geometry("240x220")
 root.title("Key Swap")
 
-#swap keys
-swap1_key = "a"
-swap2_key = "b"
+
 #go 
 go = False
 
@@ -49,12 +70,12 @@ def check():
     global go
     global swap1_key
     global swap2_key
-    if button["text"] == "Enable":
-        button.config(text = "Disable")
-        now_enabled.config(text = "NOW ENABLED!" ,)
+    if button["text"] == "有効化":
+        button.config(text = "無効化")
+        now_enabled.config(text = "現在有効" ,)
         go = True
-    elif button["text"] == "Disable":
-        button.config(text = "Enable")
+    elif button["text"] == "無効化":
+        button.config(text = "有効化")
         now_enabled.config(text="")
         go = False
 
@@ -91,7 +112,7 @@ def main():
         setup_button.config(state = tk.DISABLED)   
         swap1 = swap1_key
         swap2 = swap2_key
-        swap = str(swap1 + "," + swap2)
+        #swap = str(swap1 + "," + swap2)
         #keyboard.block_key(swap1)
         #keyboard.block_key(swap2)
         keyboard.remap_key(swap1,swap2)
@@ -143,10 +164,10 @@ def change_swap_keys():
     thread1.start()
 
 
-label1 = tk.Label(root,text="Swap Any Key You Like", font=("",14), )
+label1 = tk.Label(root,text="任意のキーを入れ替えます", font=("",14), )
 label1.pack()
 
-label2 = tk.Label(root,text = "Key Config:", font=("",10))
+label2 = tk.Label(root,text = "キー設定:", font=("",10))
 label2.pack()
 
 #何をスワップするか
@@ -154,7 +175,7 @@ label3 = tk.Label(root, text = swap1_key + " ←→ " + swap2_key, font=("",20))
 label3.pack()
 
 #スワップするキーの変更
-setup_button = tk.Button(root, text = "change swap keys",font=("", 14),command=change_swap_keys)
+setup_button = tk.Button(root, text = "入れ替えキー変更",font=("", 14),command=change_swap_keys)
 setup_button.pack()
 
 #注意
@@ -162,7 +183,7 @@ now_enabled = tk.Label(root, text = "", fg = "red", font = ("",20,"bold"))
 now_enabled.pack(pady=10)
 
 #実行
-button = tk.Button(root, text = "Enable", font = ("",14,"bold"),command=button_push)
+button = tk.Button(root, text = "有効化", font = ("",14,"bold"),command=button_push)
 button.pack()
 
 root.protocol("WM_DELETE_WINDOW", click_close)
